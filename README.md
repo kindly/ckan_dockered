@@ -30,7 +30,9 @@ You can have multiple versions just by changing the name 'myckan' and you will a
 
 ## What it does.
 
-The image itself kindly/ckan_base just contains all the ckan dependancies (postgres, solr, apache, nginx etc), but not ckan itself.  This is to make sure this script works across ckan versions.
+The image itself kindly/ckan_base just contains all the CKAN dependancies (postgres, solr, apache, nginx etc), but not ckan itself.  This is to make sure this script works across ckan versions.  This docker file is what is run to make this image.  You can make yourself by just running.
+
+```sudo docker build .```
 
 There is a python script in /usr/lib/ckan/startup.py which which gets the latest ckan package and installs it and generates random db and session secrets. This is script has a wrapper startup.sh which is there just to make sure after it is run it falls into a shell.  This is what docker run calls by default.
 
