@@ -1,0 +1,90 @@
+
+- hosts: localhost
+  sudo: True
+  vars:
+   - datastore_db: ckan_datastore
+   - datastore_readonly_user: ckan_datastore_readonly
+   - datastore_readwrite_user: ckan_datastore_readwrite
+
+  tasks:
+     - name: make locale
+       action: command locale-gen en_GB.utf8
+
+     - name: make repo
+       apt_repository: repo='deb http://archive.ubuntu.com/ubuntu precise main universe multiverse restricted' state=present
+
+     - name: -> install packages
+       action: apt pkg=${item} state=installed update_cache=yes
+       tags: install_basic
+       with_items:
+          - htop
+          - git
+          - python-dev
+          - libpq-dev
+          - language-pack-en
+          - ufw
+          - python-psycopg2
+          - postgresql
+          - postgresql-9.1
+          - postgresql-9.1-postgis
+          - tomcat6
+          - solr-tomcat
+          - wget
+
+     - name: make ckan dir
+       action: file path=/usr/lib/ckan/ state=directory
+
+     - name: drop cluster
+       action: command pg_dropcluster --stop 9.1 main
+
+     - name: crete cluster
+       action: command pg_createcluster --locale=en_GB.utf8 --start 9.1 main
+
+     - name: backup_postgres_config
+       action: command cp /etc/postgresql/9.1/main/postgresql.conf /etc/postgresql/9.1/main/${item}.orig creates=/etc/postgresql/9.1/main/${item}.orig
+       with_items:
+          - postgresql.conf
+          - pg_hba.conf
+
+     - name: postgres listen
+       lineinfile: dest=/etc/postgresql/9.1/main/postgresql.conf  line="listen_addresses = '*'" regexp="^#listen_addresses"
+
+     - name: datastore_users
+       action: postgresql_user user=${item} password=tmp_pass
+       with_items:
+          - ${datastore_readonly_user}
+          - ${datastore_readwrite_user}
+       sudo_user: postgres
+
+     - name: ckan_ckan_user
+       action: postgresql_user user=ckan password=tmp_pass
+       sudo_user: postgres
+    
+     - name: create_ckan_db
+       postgresql_db: db=ckan encoding='UTF-8' 
+       sudo_user: postgres
+
+     - name: create_datastore_db
+       action: postgresql_db db=${datastore_db} encoding='UTF-8'
+       sudo_user: postgres
+
+     - name: set_ckan_db_perms
+       postgresql_privs: >
+          db=ckan
+          privs=ALL
+          type=database
+          role=ckan
+       ignore_errors: True
+       sudo_user: postgres
+
+     - name: run db privs
+       action: command psql -d ${datastore_db} -f /tmp/dbprivs.sql
+       sudo_user: postgres
+
+     - name: fetch_solr_config
+       action: command wget https://raw.github.com/okfn/ckan/master/ckan/config/solr/schema-2.0.xml -O /etc/solr/conf/schema.xml
+
+     - name: alter tomcat port
+       action: lineinfile regexp="<Connector port=\"8080" line="    <Connector port=\"8983\" protocol=\"HTTP/1.1\"" dest=/etc/tomcat6/server.xml
+
+
