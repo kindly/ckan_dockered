@@ -6,7 +6,7 @@ There is no need to clone this reposotory as the kindly/ckan_base is non the doc
 
 The following command will install ckan and all dependancies in a container and have it running on port 5000 on the host.
 
-```sudo docker run -name=myckan -i -t -p 80:5000 kindly/ckan_base```
+```sudo docker run -name=myckan -i -t -p 5000:80 kindly/ckan_base```
 
 This will drop you into a command line where you can add a user or do any othe admin you want for the server.
 
@@ -26,7 +26,7 @@ If you need to use the command line again at any point just run.
 
 You can have multiple versions just by changing the name 'myckan' and you will also need to change the port.  So run initially.
 
-```sudo docker run -name=mysecondckan -i -t -p 80:5001 kindly/ckan_base``` 
+```sudo docker run -name=mysecondckan -i -t -p 5001:80 kindly/ckan_base```
 
 ## What it does.
 
