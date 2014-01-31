@@ -15,9 +15,6 @@ WORKDIR /tmp
 
 RUN ansible-playbook -c local -i inventory setupdb.yml
 
-ADD datapusher.wsgi /etc/ckan/datapusher.wsgi
-ADD datapusher /etc/apache2/sites-enabled/datapusher
-ADD datapusher_settings.py /etc/ckan/datapusher_settings.py
 ADD setupweb.yml /tmp/setupweb.yml
 
 RUN ansible-playbook -c local -i inventory setupweb.yml
